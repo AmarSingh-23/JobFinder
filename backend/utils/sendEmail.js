@@ -1,14 +1,7 @@
-const Brevo = require('@getbrevo/brevo');
+const SibApiV3Sdk = require('@getbrevo/brevo');
 
 const sendEmail = async (to, subject, otp) => {
   try {
-    const apiInstance = new Brevo.TransactionalEmailsApi();
-    
-    const apiKey = apiInstance.authentications['apiKey'];
-    apiKey.apiKey = process.env.BREVO_API_KEY;
-
-    const sendSmtpEmail = new Brevo.SendSmtpEmail();
-    
     let emailTo, emailSubject, emailHtml;
 
     if (typeof to === 'object' && to !== null) {
@@ -29,18 +22,33 @@ const sendEmail = async (to, subject, otp) => {
       `;
     }
 
-    sendSmtpEmail.subject = emailSubject;
-    sendSmtpEmail.to = [{ email: emailTo }];
-    sendSmtpEmail.sender = { 
-      name: process.env.FROM_NAME || 'Job Finder', 
-      email: process.env.FROM_EMAIL || 'noreply@jobfinder.com' 
-    };
-    sendSmtpEmail.htmlContent = emailHtml;
+    const response = await fetch('https://api.brevo.com/v3/smtp/email', {
+      method: 'POST',
+      headers: {
+        'accept': 'application/json',
+        'api-key': process.env.BREVO_API_KEY,
+        'content-type': 'application/json'
+      },
+      body: JSON.stringify({
+        sender: {
+          name: process.env.FROM_NAME || 'Job Finder',
+          email: process.env.FROM_EMAIL
+        },
+        to: [{ email: emailTo }],
+        subject: emailSubject,
+        htmlContent: emailHtml
+      })
+    });
 
-    await apiInstance.sendTransacEmail(sendSmtpEmail);
-    console.log('✅ Email sent successfully to', emailTo);
+    const data = await response.json();
+
+    if (!response.ok) {
+      console.error('❌ Email failed:', data);
+    } else {
+      console.log('✅ Email sent successfully to', emailTo);
+    }
   } catch (error) {
-    console.error('❌ Email failed:', error?.response?.body || error.message);
+    console.error('❌ Email failed:', error.message);
   }
 };
 
