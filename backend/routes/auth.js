@@ -81,7 +81,7 @@ router.post('/resend-otp', authLimiter, async (req, res) => {
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
     const salt = await bcrypt.genSalt(10);
     user.otp = await bcrypt.hash(otp, salt);
-    user.otpExpires = Date.now() + 5 * 60 * 1000;
+    user.otpExpires = Date.now() + 10 * 60 * 1000;
     await user.save();
 
     try {

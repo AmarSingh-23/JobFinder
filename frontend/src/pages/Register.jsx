@@ -1,4 +1,4 @@
-import React, { useState, useContext } from 'react';
+import React, { useState, useContext, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import api from '../api/axios';
@@ -40,7 +40,28 @@ const Register = () => {
   const [message, setMessage] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [resendTimer, setResendTimer] = useState(60);
+  const [canResend, setCanResend] = useState(false);
+  const [resendTrigger, setResendTrigger] = useState(0);
   const { register, verifyOtp, resendOtp } = useContext(AuthContext);
+
+  useEffect(() => {
+    if (step === 2 || step === 'otp') {
+      setResendTimer(60);
+      setCanResend(false);
+      const interval = setInterval(() => {
+        setResendTimer(prev => {
+          if (prev <= 1) {
+            clearInterval(interval);
+            setCanResend(true);
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+      return () => clearInterval(interval);
+    }
+  }, [step, resendTrigger]);
   const navigate = useNavigate();
   const strength = getPasswordStrength(formData.password);
 
@@ -86,6 +107,7 @@ const Register = () => {
     try {
       const res = await resendOtp(formData.email);
       setMessage(res.message);
+      setResendTrigger(prev => prev + 1);
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to resend OTP');
     } finally {
@@ -199,9 +221,10 @@ const Register = () => {
               <button
                 type="button"
                 onClick={handleResendOtp}
-                className="text-sm font-semibold text-blue-600 hover:text-blue-800 transition-colors"
+                disabled={!canResend}
+                className={`text-sm font-semibold ${canResend ? 'text-blue-600 cursor-pointer hover:underline' : 'text-gray-400 cursor-not-allowed'}`}
               >
-                Resend OTP
+                {canResend ? 'Resend OTP' : `Resend OTP in ${resendTimer}s`}
               </button>
             </div>
             <button
