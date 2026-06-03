@@ -19,8 +19,8 @@ router.post('/', auth, async (req, res) => {
       return res.status(403).json({ message: 'Only companies can post jobs' });
     }
 
-    const { title, description, company, location, jobType, salary, experienceLevel } = req.body;
-    if (!title || !description || !company || !location || !jobType || !salary || !experienceLevel) {
+    const { title, description, company, location, category, jobType, salary, experienceLevel } = req.body;
+    if (!title || !description || !company || !location || !category || !jobType || !salary || !experienceLevel) {
       return res.status(400).json({ message: 'All fields are required' });
     }
     if (Number(salary) <= 0) {

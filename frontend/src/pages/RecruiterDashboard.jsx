@@ -11,7 +11,7 @@ const RecruiterDashboard = () => {
   
   // New Job Form State
   const [jobForm, setJobForm] = useState({
-    title: '', description: '', company: '', location: '', jobType: 'Full-time', salary: '', experienceLevel: 'Entry Level', skillsRequired: ''
+    title: '', description: '', company: '', location: '', category: 'IT & Software', jobType: 'Full-time', salary: '', experienceLevel: 'Entry Level', skillsRequired: ''
   });
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(true);
@@ -67,7 +67,7 @@ const RecruiterDashboard = () => {
       });
       setMessage({ type: 'success', text: 'Job posted successfully!' });
       setJobForm({
-        title: '', description: '', company: '', location: '', jobType: 'Full-time', salary: '', experienceLevel: 'Entry Level', skillsRequired: ''
+        title: '', description: '', company: '', location: '', category: 'IT & Software', jobType: 'Full-time', salary: '', experienceLevel: 'Entry Level', skillsRequired: ''
       });
       fetchMyJobs();
       setTimeout(() => setMessage(''), 3000);
@@ -225,6 +225,21 @@ const RecruiterDashboard = () => {
                       <option value="Mid Level">Mid Level</option>
                       <option value="Senior Level">Senior Level</option>
                       <option value="Executive">Executive</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1">Job Category</label>
+                    <select className="w-full px-4 py-3 rounded-full border border-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium text-gray-900 cursor-pointer" value={jobForm.category} onChange={e => setJobForm({...jobForm, category: e.target.value})}>
+                      <option value="IT & Software">IT & Software</option>
+                      <option value="Design">Design</option>
+                      <option value="Marketing">Marketing</option>
+                      <option value="Sales">Sales</option>
+                      <option value="HR">HR</option>
+                      <option value="Business">Business</option>
+                      <option value="Engineering">Engineering</option>
+                      <option value="Finance">Finance</option>
+                      <option value="Education">Education</option>
+                      <option value="Other">Other</option>
                     </select>
                   </div>
                 </div>
