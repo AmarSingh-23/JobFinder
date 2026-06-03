@@ -2,16 +2,17 @@ import React, { useState, useEffect, useContext } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import api from '../api/axios';
 import { AuthContext } from '../context/AuthContext';
+import { useToast } from '../context/ToastContext';
 
 const JobDetails = () => {
   const { id } = useParams();
   const [job, setJob] = useState(null);
   const [loading, setLoading] = useState(true);
   const [applying, setApplying] = useState(false);
-  const [message, setMessage] = useState('');
   const [modalError, setModalError] = useState('');
   const { user } = useContext(AuthContext);
   const navigate = useNavigate();
+  const { showToast } = useToast();
 
   // Modal State
   const [showModal, setShowModal] = useState(false);
@@ -68,7 +69,6 @@ const JobDetails = () => {
 
     setApplying(true);
     setModalError('');
-    setMessage('');
     
     try {
       const data = new FormData();
@@ -84,11 +84,18 @@ const JobDetails = () => {
           'Content-Type': 'multipart/form-data',
         },
       });
-      setMessage('Application submitted successfully!');
+      showToast('Application submitted successfully!', 'success');
       setShowModal(false);
     } catch (err) {
       console.error("Full error response:", err.response?.data);
-      setModalError(err.response?.data?.error || err.response?.data?.message || 'Failed to apply');
+      const errMsg = err.response?.data?.message || err.response?.data?.error || '';
+      if (errMsg.toLowerCase().includes('already applied')) {
+        showToast('You have already applied for this job', 'warning');
+        setShowModal(false);
+      } else {
+        showToast('Failed to submit application. Try again.', 'error');
+        setModalError(errMsg || 'Failed to apply');
+      }
     } finally {
       setApplying(false);
     }
@@ -137,11 +144,6 @@ const JobDetails = () => {
 
   return (
     <div className="max-w-4xl mx-auto py-8">
-      {message && (
-        <div className={`p-4 mb-6 rounded-lg font-medium ${message.includes('success') ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-600'}`}>
-          {message}
-        </div>
-      )}
       <div className="bg-white rounded-[2rem] shadow-xl border border-gray-100 overflow-hidden relative">
         <div className="p-8 md:p-10 border-b border-gray-100 bg-gray-50/50">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">

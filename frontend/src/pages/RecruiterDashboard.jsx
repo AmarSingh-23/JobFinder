@@ -2,6 +2,7 @@ import React, { useState, useEffect, useContext } from 'react';
 import api from '../api/axios';
 import { AuthContext } from '../context/AuthContext';
 import { Link } from 'react-router-dom';
+import { useToast } from '../context/ToastContext';
 
 const RecruiterDashboard = () => {
   const { user } = useContext(AuthContext);
@@ -13,9 +14,9 @@ const RecruiterDashboard = () => {
   const [jobForm, setJobForm] = useState({
     title: '', description: '', company: '', location: '', category: 'IT & Software', jobType: 'Full-time', salary: '', experienceLevel: 'Entry Level', skillsRequired: ''
   });
-  const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(true);
   const [confirmDeleteId, setConfirmDeleteId] = useState(null);
+  const { showToast } = useToast();
 
   useEffect(() => {
     const loadData = async () => {
@@ -65,33 +66,34 @@ const RecruiterDashboard = () => {
         ...jobForm,
         skillsRequired: skillsArray
       });
-      setMessage({ type: 'success', text: 'Job posted successfully!' });
+      showToast('Job posted successfully!', 'success');
       setJobForm({
         title: '', description: '', company: '', location: '', category: 'IT & Software', jobType: 'Full-time', salary: '', experienceLevel: 'Entry Level', skillsRequired: ''
       });
       fetchMyJobs();
-      setTimeout(() => setMessage(''), 3000);
       setActiveTab('jobs');
     } catch (err) {
-      setMessage({ type: 'error', text: 'Failed to post job' });
+      showToast('Something went wrong. Please try again.', 'error');
     }
   };
 
   const updateApplicationStatus = async (appId, status) => {
     try {
       await api.put(`/applications/${appId}/status`, { status });
+      showToast('Application status updated', 'success');
       fetchApplicants();
     } catch (err) {
-      setMessage({ type: 'error', text: 'Failed to update status' });
+      showToast('Something went wrong. Please try again.', 'error');
     }
   };
 
   const deleteJob = async (jobId) => {
     try {
       await api.delete(`/jobs/${jobId}`);
+      showToast('Job deleted successfully', 'info');
       fetchMyJobs();
     } catch (err) {
-      setMessage({ type: 'error', text: 'Failed to delete job' });
+      showToast('Something went wrong. Please try again.', 'error');
     }
   };
 
@@ -128,11 +130,6 @@ const RecruiterDashboard = () => {
 
         {/* Content Area */}
         <div className="w-full md:w-3/4">
-          {message && (
-            <div className={`p-4 mb-6 rounded-full font-medium ${message.type === 'success' ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-600'}`}>
-              {message.text}
-            </div>
-          )}
 
           {activeTab === 'jobs' && (
             <div className="bg-white rounded-[2rem] shadow-sm border border-gray-100 overflow-hidden">

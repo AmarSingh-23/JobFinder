@@ -2,6 +2,7 @@ import React, { useState, useContext, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import api from '../api/axios';
+import { useToast } from '../context/ToastContext';
 
 const getPasswordStrength = (password) => {
   if (!password) return { score: 0, label: '', color: 'text-gray-400', barColor: 'bg-gray-200', width: 'w-0' };
@@ -37,13 +38,13 @@ const Register = () => {
   const [step, setStep] = useState(1); // 1: Info, 2: OTP (if user)
   const [otp, setOtp] = useState('');
   const [error, setError] = useState('');
-  const [message, setMessage] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [resendTimer, setResendTimer] = useState(60);
   const [canResend, setCanResend] = useState(false);
   const [resendTrigger, setResendTrigger] = useState(0);
   const { register, verifyOtp, resendOtp } = useContext(AuthContext);
+  const { showToast } = useToast();
 
   useEffect(() => {
     if (step === 2 || step === 'otp') {
@@ -72,7 +73,6 @@ const Register = () => {
   const handleRegister = async (e) => {
     e.preventDefault();
     setError('');
-    setMessage('');
 
     if (!formData.email.toLowerCase().endsWith('@gmail.com')) {
       setError('Please use a valid Gmail address (@gmail.com)');
@@ -86,12 +86,13 @@ const Register = () => {
 
     setIsSubmitting(true);
     try {
-      const data = await register(formData);
+      await register(formData);
       if (formData.role === 'user' || formData.role === 'admin') {
-        setMessage('Registration successful! Check your email for the OTP.');
+        showToast('OTP sent to your email! Check your inbox', 'success');
         setStep(2); // Go to OTP step
       } else if (formData.role === 'company') {
-        setMessage('Company registered successfully! Please wait for admin approval to login.');
+        showToast('Account created successfully! Welcome', 'success');
+        setTimeout(() => navigate('/login'), 2000);
       }
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to register');
@@ -102,11 +103,10 @@ const Register = () => {
 
   const handleResendOtp = async () => {
     setError('');
-    setMessage('');
     setIsSubmitting(true);
     try {
       const res = await resendOtp(formData.email);
-      setMessage(res.message);
+      showToast(res.message || 'OTP resent successfully', 'success');
       setResendTrigger(prev => prev + 1);
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to resend OTP');
@@ -118,13 +118,13 @@ const Register = () => {
   const handleVerify = async (e) => {
     e.preventDefault();
     setError('');
-    setMessage('');
     setIsSubmitting(true);
     try {
       await verifyOtp(formData.email, otp);
-      setMessage('Email verified! Redirecting to login...');
+      showToast('Account created successfully! Welcome', 'success');
       setTimeout(() => navigate('/login'), 2000);
     } catch (err) {
+      showToast('Invalid OTP. Please try again.', 'error');
       setError(err.response?.data?.message || 'Invalid OTP');
     } finally {
       setIsSubmitting(false);
@@ -138,7 +138,6 @@ const Register = () => {
         <p className="text-gray-500 mb-8 text-center">Join thousands of others today.</p>
 
         {error && <div className="bg-red-50 text-red-600 p-3 rounded-full mb-6 text-sm font-medium">{error}</div>}
-        {message && <div className="bg-green-50 text-green-700 p-3 rounded-full mb-6 text-sm font-medium">{message}</div>}
 
         {step === 1 ? (
           <form onSubmit={handleRegister} className="space-y-4">

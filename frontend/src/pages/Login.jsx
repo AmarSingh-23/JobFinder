@@ -2,13 +2,13 @@ import React, { useState, useContext, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import api from '../api/axios';
+import { useToast } from '../context/ToastContext';
 
 const Login = () => {
   const [activeTab, setActiveTab] = useState('user'); // user, company, admin
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
-  const [message, setMessage] = useState('');
   const [view, setView] = useState('login'); // login, forgotPassword, resetPassword
   const [otp, setOtp] = useState('');
   const [newPassword, setNewPassword] = useState('');
@@ -20,6 +20,7 @@ const Login = () => {
   const [resendTrigger, setResendTrigger] = useState(0);
 
   const { login, verifyOtp, resendOtp } = useContext(AuthContext);
+  const { showToast } = useToast();
 
   useEffect(() => {
     if (view === 'verifyOtp') {
@@ -43,7 +44,6 @@ const Login = () => {
   const handleLogin = async (e) => {
     e.preventDefault();
     setError('');
-    setMessage('');
 
     if (!email.toLowerCase().endsWith('@gmail.com') && activeTab !== 'admin') {
       // Typically admins don't strictly need gmail, but let's encourage it or relax it
@@ -54,6 +54,7 @@ const Login = () => {
     setIsSubmitting(true);
     try {
       const data = await login(email, password, activeTab);
+      showToast('Welcome back! Login successful', 'success');
       // Route based on role
       if (data.user.role === 'company') {
         navigate('/dashboard/company');
@@ -65,11 +66,11 @@ const Login = () => {
     } catch (err) {
       if (err.response?.data?.needsVerification) {
         setError('');
-        setMessage('Your email is not verified. A new 6-digit OTP has been sent to your email.');
+        showToast('Your email is not verified. A new 6-digit OTP has been sent to your email.', 'warning');
         // Change view to verify OTP
         setView('verifyOtp');
       } else {
-        setError(err.response?.data?.message || 'Failed to login');
+        showToast('Invalid email or password', 'error');
       }
     } finally {
       setIsSubmitting(false);
@@ -78,11 +79,10 @@ const Login = () => {
 
   const handleResendOtp = async () => {
     setError('');
-    setMessage('');
     setIsSubmitting(true);
     try {
       const res = await resendOtp(email);
-      setMessage(res.message);
+      showToast(res.message || 'OTP resent successfully', 'success');
       setResendTrigger(prev => prev + 1);
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to resend OTP');
@@ -94,11 +94,10 @@ const Login = () => {
   const handleVerifyOtp = async (e) => {
     e.preventDefault();
     setError('');
-    setMessage('');
     setIsSubmitting(true);
     try {
       await verifyOtp(email, otp);
-      setMessage('Email verified! You can now log in.');
+      showToast('Email verified! You can now log in.', 'success');
       setTimeout(() => {
         setView('login');
         setOtp('');
@@ -113,11 +112,10 @@ const Login = () => {
   const handleForgotPassword = async (e) => {
     e.preventDefault();
     setError('');
-    setMessage('');
     setIsSubmitting(true);
     try {
       await api.post('/auth/forgot-password', { email, role: activeTab });
-      setMessage('OTP sent to your email. Check your inbox (or console for dev).');
+      showToast('OTP sent to your email. Check your inbox (or console for dev).', 'info');
       setView('resetPassword');
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to send OTP');
@@ -129,11 +127,10 @@ const Login = () => {
   const handleResetPassword = async (e) => {
     e.preventDefault();
     setError('');
-    setMessage('');
     setIsSubmitting(true);
     try {
       await api.post('/auth/reset-password', { email, otp, newPassword });
-      setMessage('Password reset successful! You can now login.');
+      showToast('Password reset successful! You can now login.', 'success');
       setTimeout(() => {
         setView('login');
         setPassword('');
@@ -157,7 +154,6 @@ const Login = () => {
         </p>
 
         {error && <div className="bg-red-50 text-red-600 p-3 rounded-full mb-6 text-sm font-medium">{error}</div>}
-        {message && <div className="bg-green-50 text-green-700 p-3 rounded-full mb-6 text-sm font-medium">{message}</div>}
 
         {view === 'login' && (
           <>
@@ -171,7 +167,6 @@ const Login = () => {
                   onClick={() => {
                     setActiveTab(role);
                     setError('');
-                    setMessage('');
                   }}
                 >
                   {role}
