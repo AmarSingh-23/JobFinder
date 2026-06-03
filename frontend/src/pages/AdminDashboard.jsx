@@ -1,24 +1,43 @@
 import React, { useState, useEffect } from 'react';
 import api from '../api/axios';
+import { useToast } from '../context/ToastContext';
 
 const AdminDashboard = () => {
   const [pendingCompanies, setPendingCompanies] = useState([]);
+  const [categoryRequests, setCategoryRequests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
+  const { showToast } = useToast();
 
   useEffect(() => {
-    fetchPendingCompanies();
+    const loadData = async () => {
+      try {
+        await Promise.all([fetchPendingCompanies(), fetchCategoryRequests()]);
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadData();
   }, []);
 
   const fetchPendingCompanies = async () => {
     try {
       const res = await api.get('/auth/admin/pending-companies');
       setPendingCompanies(res.data);
-      setLoading(false);
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to fetch companies');
-      setLoading(false);
+    }
+  };
+
+  const fetchCategoryRequests = async () => {
+    try {
+      const res = await api.get('/categories/pending');
+      setCategoryRequests(res.data);
+    } catch (err) {
+      console.error(err);
     }
   };
 
@@ -43,6 +62,26 @@ const AdminDashboard = () => {
       setPendingCompanies(pendingCompanies.filter(c => c._id !== companyId));
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to reject company');
+    }
+  };
+
+  const approveCategory = async (id) => {
+    try {
+      await api.put(`/categories/approve/${id}`);
+      showToast('Category approved successfully', 'success');
+      fetchCategoryRequests();
+    } catch (err) {
+      showToast(err.response?.data?.message || 'Failed to approve category', 'error');
+    }
+  };
+
+  const rejectCategory = async (id) => {
+    try {
+      await api.put(`/categories/reject/${id}`);
+      showToast('Category rejected', 'info');
+      fetchCategoryRequests();
+    } catch (err) {
+      showToast(err.response?.data?.message || 'Failed to reject category', 'error');
     }
   };
 
@@ -78,13 +117,50 @@ const AdminDashboard = () => {
                 <div className="flex gap-2">
                   <button
                     onClick={() => verifyCompany(company._id)}
-                    className="bg-blue-600 text-white px-4 py-2 rounded-full font-bold hover:bg-blue-700 transition"
+                    className="bg-blue-600 text-white px-4 py-2 rounded-full font-bold hover:bg-blue-700 transition cursor-pointer"
                   >
                     Approve
                   </button>
                   <button
                     onClick={() => rejectCompany(company._id)}
-                    className="bg-red-600 text-white px-4 py-2 rounded-full font-bold hover:bg-red-700 transition"
+                    className="bg-red-600 text-white px-4 py-2 rounded-full font-bold hover:bg-red-700 transition cursor-pointer"
+                  >
+                    Reject
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      <div className="bg-white rounded-[2rem] shadow border border-gray-100 p-6 mt-8">
+        <h2 className="text-xl font-bold mb-4">Pending Category Requests ({categoryRequests.length})</h2>
+        {categoryRequests.length === 0 ? (
+          <p className="text-gray-500">No pending category requests.</p>
+        ) : (
+          <div className="space-y-4">
+            {categoryRequests.map(req => (
+              <div key={req._id} className="flex justify-between items-center bg-gray-50 p-4 rounded-full border border-gray-100">
+                <div>
+                  <h3 className="font-bold text-lg">{req.name}</h3>
+                  <p className="text-gray-600 font-medium">
+                    Requested by: {req.requestedBy?.name || 'Unknown'} ({req.companyName})
+                  </p>
+                  <p className="text-xs text-gray-400 mt-1">
+                    Requested on: {new Date(req.createdAt).toLocaleDateString()}
+                  </p>
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => approveCategory(req._id)}
+                    className="bg-green-600 text-white px-4 py-2 rounded-full font-bold hover:bg-green-700 transition cursor-pointer text-sm"
+                  >
+                    Approve
+                  </button>
+                  <button
+                    onClick={() => rejectCategory(req._id)}
+                    className="bg-red-600 text-white px-4 py-2 rounded-full font-bold hover:bg-red-700 transition cursor-pointer text-sm"
                   >
                     Reject
                   </button>

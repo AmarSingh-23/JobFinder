@@ -5,7 +5,7 @@ const jobSchema = new mongoose.Schema({
   description: { type: String, required: true },
   company: { type: String, required: true },
   location: { type: String, required: true },
-  category: { type: String, enum: ['IT & Software', 'Design', 'Marketing', 'Sales', 'HR', 'Business', 'Engineering', 'Finance', 'Education', 'Other'], required: true },
+  category: { type: String, required: true },
   jobType: { type: String, enum: ['Full-time', 'Part-time', 'Contract', 'Internship', 'Remote'], required: true }, // Full-time, Part-time, Contract, etc.
   salary: { type: Number, required: true },
   experienceLevel: { type: String, enum: ['Entry Level', 'Mid Level', 'Senior Level', 'Executive'], required: true },

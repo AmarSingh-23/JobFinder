@@ -1,6 +1,7 @@
 import React, { useState, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
+import { useToast } from '../context/ToastContext';
 
 const AdminLogin = () => {
   const [email, setEmail] = useState('');
@@ -12,8 +13,14 @@ const AdminLogin = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [showResetForm, setShowResetForm] = useState(false);
+  const [resetEmail, setResetEmail] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+
   const { login, verifyOtp, resendOtp } = useContext(AuthContext);
   const navigate = useNavigate();
+  const { showToast } = useToast();
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -73,6 +80,32 @@ const AdminLogin = () => {
     }
   };
 
+  const handleForgotPassword = async (e) => {
+    if (e) e.preventDefault();
+    try {
+      await api.post('/auth/forgot-password', { email: resetEmail });
+      showToast('OTP sent to your admin email', 'success');
+      setShowForgotPassword(false);
+      setShowResetForm(true);
+    } catch (err) {
+      showToast(err.response?.data?.message || 'Failed to send OTP', 'error');
+    }
+  };
+
+  const handleResetPassword = async (e) => {
+    e.preventDefault();
+    try {
+      await api.post('/auth/reset-password', { email: resetEmail, otp, newPassword });
+      showToast('Password reset successful! You can now login.', 'success');
+      setShowResetForm(false);
+      setView('login');
+      setNewPassword('');
+      setOtp('');
+    } catch (err) {
+      showToast(err.response?.data?.message || 'Failed to reset password', 'error');
+    }
+  };
+
   return (
     <div className="flex justify-center items-center py-12">
       <div className="bg-white p-8 rounded-[2rem] shadow-2xl border border-gray-100 w-full max-w-md transform transition-all hover:shadow-2xl">
@@ -86,7 +119,7 @@ const AdminLogin = () => {
         {error && <div className="bg-red-50 text-red-600 p-3 rounded-full mb-6 text-sm font-medium">{error}</div>}
         {message && <div className="bg-green-50 text-green-700 p-3 rounded-full mb-6 text-sm font-medium">{message}</div>}
 
-        {view === 'login' && (
+        {view === 'login' && !showForgotPassword && !showResetForm && (
           <form onSubmit={handleLogin} className="space-y-4">
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-1">Admin Email</label>
@@ -122,6 +155,13 @@ const AdminLogin = () => {
                   )}
                 </button>
               </div>
+              <button
+                type="button"
+                onClick={() => setShowForgotPassword(true)}
+                className="text-xs text-blue-600 hover:underline mt-2 cursor-pointer"
+              >
+                Forgot Password?
+              </button>
             </div>
             
             <button
@@ -131,6 +171,80 @@ const AdminLogin = () => {
             >
               {isSubmitting ? 'Signing In...' : 'Sign In to Admin Dashboard'}
             </button>
+          </form>
+        )}
+
+        {showForgotPassword && (
+          <form onSubmit={handleForgotPassword} className="space-y-4">
+            <div>
+              <p className="text-sm text-gray-600 mb-2 font-medium">Enter your admin email to receive OTP</p>
+              <input
+                type="email"
+                value={resetEmail}
+                onChange={(e) => setResetEmail(e.target.value)}
+                placeholder="Admin email"
+                className="w-full px-4 py-3 rounded-full border border-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium"
+                required
+              />
+            </div>
+            <div className="flex gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => setShowForgotPassword(false)}
+                className="flex-1 py-3 bg-gray-100 text-gray-700 rounded-full font-bold hover:bg-gray-200 transition-all cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                className="flex-1 py-3 bg-blue-600 text-white rounded-full font-bold hover:bg-blue-700 transition-all cursor-pointer"
+              >
+                Send OTP
+              </button>
+            </div>
+          </form>
+        )}
+
+        {showResetForm && (
+          <form onSubmit={handleResetPassword} className="space-y-4">
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-1">OTP</label>
+              <input
+                type="text"
+                value={otp}
+                onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                placeholder="123456"
+                className="w-full px-4 py-3 rounded-full border border-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 text-center tracking-widest font-bold text-xl"
+                maxLength={6}
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-1">New Password</label>
+              <input
+                type="password"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                placeholder="••••••••"
+                className="w-full px-4 py-3 rounded-full border border-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium"
+                required
+              />
+            </div>
+            <div className="flex gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => setShowResetForm(false)}
+                className="flex-1 py-3 bg-gray-100 text-gray-700 rounded-full font-bold hover:bg-gray-200 transition-all cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                className="flex-1 py-3 bg-green-600 text-white rounded-full font-bold hover:bg-green-700 transition-all cursor-pointer"
+              >
+                Reset Password
+              </button>
+            </div>
           </form>
         )}
 
@@ -173,11 +287,7 @@ const AdminLogin = () => {
           </form>
         )}
 
-        {view === 'login' && (
-          <div className="mt-6 text-center text-sm text-gray-600 font-medium">
-            No admin account? <button onClick={() => navigate('/admin-register')} className="text-blue-600 font-bold hover:underline">Apply here</button>
-          </div>
-        )}
+
       </div>
     </div>
   );
