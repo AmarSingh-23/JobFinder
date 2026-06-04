@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import api from '../api/axios';
 import { useToast } from '../context/ToastContext';
+import usePageTitle from '../hooks/usePageTitle';
 
 const AdminDashboard = () => {
+  usePageTitle('Admin Dashboard');
   const [pendingCompanies, setPendingCompanies] = useState([]);
   const [categoryRequests, setCategoryRequests] = useState([]);
   const [loading, setLoading] = useState(true);

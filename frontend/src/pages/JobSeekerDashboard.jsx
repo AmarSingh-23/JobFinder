@@ -2,8 +2,10 @@ import React, { useState, useEffect, useContext } from 'react';
 import api from '../api/axios';
 import { AuthContext } from '../context/AuthContext';
 import { Link } from 'react-router-dom';
+import usePageTitle from '../hooks/usePageTitle';
 
 const JobSeekerDashboard = () => {
+  usePageTitle('My Dashboard');
   const { user, setUser } = useContext(AuthContext);
   const [applications, setApplications] = useState([]);
   const [activeTab, setActiveTab] = useState('applications');

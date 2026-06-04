@@ -3,8 +3,10 @@ import api from '../api/axios';
 import { AuthContext } from '../context/AuthContext';
 import { Link } from 'react-router-dom';
 import { useToast } from '../context/ToastContext';
+import usePageTitle from '../hooks/usePageTitle';
 
 const RecruiterDashboard = () => {
+  usePageTitle('Recruiter Dashboard');
   const { user } = useContext(AuthContext);
   const [activeTab, setActiveTab] = useState('jobs'); // 'jobs', 'post', 'applicants'
   const [myJobs, setMyJobs] = useState([]);

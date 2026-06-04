@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import api from '../api/axios';
 import JobCard from '../components/JobCard';
+import usePageTitle from '../hooks/usePageTitle';
 
 const Home = () => {
+  usePageTitle('Browse Jobs');
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState({

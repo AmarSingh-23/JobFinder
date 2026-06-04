@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import api from '../api/axios';
 import { AuthContext } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
+import usePageTitle from '../hooks/usePageTitle';
 
 const JobDetails = () => {
   const { id } = useParams();
@@ -13,6 +14,7 @@ const JobDetails = () => {
   const { user } = useContext(AuthContext);
   const navigate = useNavigate();
   const { showToast } = useToast();
+  usePageTitle(job ? job.title : 'Job Details');
 
   // Modal State
   const [showModal, setShowModal] = useState(false);

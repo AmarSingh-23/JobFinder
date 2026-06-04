@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import api from '../api/axios';
 import JobCard from '../components/JobCard';
+import usePageTitle from '../hooks/usePageTitle';
 
 const AiSearch = () => {
+  usePageTitle('AI Match');
   const [file, setFile] = useState(null);
   const [jobs, setJobs] = useState([]);
   const [skills, setSkills] = useState([]);

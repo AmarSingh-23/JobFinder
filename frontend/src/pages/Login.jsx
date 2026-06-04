@@ -3,8 +3,10 @@ import { useNavigate, Link } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import api from '../api/axios';
 import { useToast } from '../context/ToastContext';
+import usePageTitle from '../hooks/usePageTitle';
 
 const Login = () => {
+  usePageTitle('Login');
   const [activeTab, setActiveTab] = useState('user'); // user, company, admin
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');

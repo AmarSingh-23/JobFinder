@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import api from '../api/axios';
 import { useToast } from '../context/ToastContext';
+import usePageTitle from '../hooks/usePageTitle';
 
 const getPasswordStrength = (password) => {
   if (!password) return { score: 0, label: '', color: 'text-gray-400', barColor: 'bg-gray-200', width: 'w-0' };
@@ -32,6 +33,7 @@ const getPasswordStrength = (password) => {
 };
 
 const Register = () => {
+  usePageTitle('Create Account');
   const [formData, setFormData] = useState({
     name: '', email: '', password: '', role: 'user'
   });
