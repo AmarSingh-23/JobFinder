@@ -318,9 +318,128 @@ router.post('/admin/verify-company', auth, async (req, res) => {
     company.isVerified = true;
     await company.save();
 
+    // Get the approved company's details
+    const approvedUser = await User.findById(companyId);
+
+    // Send approval email
+    await sendEmail(
+      approvedUser.email,
+      'Your Company Has Been Approved! 🎉',
+      null,
+      `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <div style="text-align: center; padding: 30px; background: #2563eb; border-radius: 12px 12px 0 0;">
+          <h1 style="color: white; margin: 0; font-size: 24px;">🎉 Congratulations!</h1>
+        </div>
+        <div style="padding: 30px; background: #f9fafb; border-radius: 0 0 12px 12px;">
+          <h2 style="color: #1f2937;">Your Company Has Been Approved</h2>
+          <p style="color: #4b5563;">Dear <strong>${approvedUser.name}</strong>,</p>
+          <p style="color: #4b5563;">
+            We are pleased to inform you that your company 
+            <strong>${approvedUser.companyName || approvedUser.name}</strong> 
+            has been reviewed and approved by our admin team.
+          </p>
+          <div style="background: #dcfce7; border: 1px solid #86efac; border-radius: 10px; padding: 16px; margin: 20px 0;">
+            <p style="color: #166534; margin: 0; font-weight: 600;">
+              ✅ You can now log in and start posting jobs!
+            </p>
+          </div>
+          <p style="color: #4b5563;">You can now:</p>
+          <ul style="color: #4b5563; line-height: 2;">
+            <li>Post unlimited job listings</li>
+            <li>Review and manage applications</li>
+            <li>Find the best talent for your company</li>
+          </ul>
+          <div style="text-align: center; margin: 30px 0;">
+            <a 
+              href="${process.env.FRONTEND_URL}/login" 
+              style="background: #2563eb; color: white; padding: 14px 32px; border-radius: 10px; text-decoration: none; font-weight: bold; font-size: 16px;"
+            >
+              Login to Your Dashboard →
+            </a>
+          </div>
+          <p style="color: #9ca3af; font-size: 13px; text-align: center;">
+            If you have any questions, please contact our support team.
+          </p>
+        </div>
+        <div style="text-align: center; padding: 16px; color: #9ca3af; font-size: 12px;">
+          © 2026 Job Finder. All rights reserved.
+        </div>
+      </div>
+      `
+    );
+
     res.status(200).json({ message: 'Company verified successfully' });
   } catch (err) {
     res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Admin ONLY: Approve Company (PUT)
+router.put('/admin/approve-company/:id', auth, async (req, res) => {
+  try {
+    if (req.user.role !== 'admin') return res.status(403).json({ message: 'Access denied' });
+
+    const company = await User.findById(req.params.id);
+    if (!company || company.role !== 'company') return res.status(404).json({ message: 'Company not found' });
+
+    company.isVerified = true;
+    await company.save();
+
+    // Get the approved company's details
+    const approvedUser = await User.findById(req.params.id);
+
+    // Send approval email
+    await sendEmail(
+      approvedUser.email,
+      'Your Company Has Been Approved! 🎉',
+      null,
+      `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <div style="text-align: center; padding: 30px; background: #2563eb; border-radius: 12px 12px 0 0;">
+          <h1 style="color: white; margin: 0; font-size: 24px;">🎉 Congratulations!</h1>
+        </div>
+        <div style="padding: 30px; background: #f9fafb; border-radius: 0 0 12px 12px;">
+          <h2 style="color: #1f2937;">Your Company Has Been Approved</h2>
+          <p style="color: #4b5563;">Dear <strong>${approvedUser.name}</strong>,</p>
+          <p style="color: #4b5563;">
+            We are pleased to inform you that your company 
+            <strong>${approvedUser.companyName || approvedUser.name}</strong> 
+            has been reviewed and approved by our admin team.
+          </p>
+          <div style="background: #dcfce7; border: 1px solid #86efac; border-radius: 10px; padding: 16px; margin: 20px 0;">
+            <p style="color: #166534; margin: 0; font-weight: 600;">
+              ✅ You can now log in and start posting jobs!
+            </p>
+          </div>
+          <p style="color: #4b5563;">You can now:</p>
+          <ul style="color: #4b5563; line-height: 2;">
+            <li>Post unlimited job listings</li>
+            <li>Review and manage applications</li>
+            <li>Find the best talent for your company</li>
+          </ul>
+          <div style="text-align: center; margin: 30px 0;">
+            <a 
+              href="${process.env.FRONTEND_URL}/login" 
+              style="background: #2563eb; color: white; padding: 14px 32px; border-radius: 10px; text-decoration: none; font-weight: bold; font-size: 16px;"
+            >
+              Login to Your Dashboard →
+            </a>
+          </div>
+          <p style="color: #9ca3af; font-size: 13px; text-align: center;">
+            If you have any questions, please contact our support team.
+          </p>
+        </div>
+        <div style="text-align: center; padding: 16px; color: #9ca3af; font-size: 12px;">
+          © 2026 Job Finder. All rights reserved.
+        </div>
+      </div>
+      `
+    );
+
+    res.status(200).json({ message: 'Company approved successfully' });
+  } catch (err) {
+    res.status(500).json({ message: 'Server error', error: err.message });
   }
 });
 

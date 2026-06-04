@@ -14,7 +14,10 @@ const RecruiterDashboard = () => {
   const [editingJobId, setEditingJobId] = useState(null);
   const [showCategoryRequest, setShowCategoryRequest] = useState(false);
   const [newCategoryName, setNewCategoryName] = useState('');
-  const [categories, setCategories] = useState([]);
+  const [categories, setCategories] = useState([
+    'IT & Software', 'Design', 'Marketing', 'Sales', 
+    'HR', 'Business', 'Engineering', 'Finance', 'Education', 'Other'
+  ]);
   
   // New Job Form State
   const [jobForm, setJobForm] = useState({
