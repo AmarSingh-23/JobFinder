@@ -21,8 +21,12 @@ export const AuthProvider = ({ children }) => {
     fetchUser();
   }, []);
 
-  const login = async (email, password, role) => {
-    const res = await api.post('/auth/login', { email, password, role });
+  const login = async (emailOrUser, passwordOrToken, role) => {
+    if (emailOrUser && typeof emailOrUser === 'object') {
+      setUser(emailOrUser);
+      return { user: emailOrUser };
+    }
+    const res = await api.post('/auth/login', { email: emailOrUser, password: passwordOrToken, role });
     setUser(res.data.user);
     return res.data;
   };

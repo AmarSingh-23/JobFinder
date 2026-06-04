@@ -45,7 +45,7 @@ const Register = () => {
   const [resendTimer, setResendTimer] = useState(60);
   const [canResend, setCanResend] = useState(false);
   const [resendTrigger, setResendTrigger] = useState(0);
-  const { register, verifyOtp, resendOtp } = useContext(AuthContext);
+  const { register, verifyOtp, resendOtp, login } = useContext(AuthContext);
   const { showToast } = useToast();
 
   useEffect(() => {
@@ -122,11 +122,24 @@ const Register = () => {
     setError('');
     setIsSubmitting(true);
     try {
-      await verifyOtp(formData.email, otp);
-      showToast('Account created successfully! Welcome', 'success');
-      setTimeout(() => navigate('/login'), 2000);
+      const response = await verifyOtp(formData.email, otp);
+      
+      // Auto login - save user to context
+      const { user, token } = response;
+      await login(user, token);
+      
+      showToast(`Welcome ${user.name}! Account created successfully`, 'success');
+      
+      // Redirect based on role
+      if (user.role === 'company') {
+        navigate('/dashboard/company');
+      } else if (user.role === 'admin') {
+        navigate('/dashboard/admin');
+      } else {
+        navigate('/dashboard/user');
+      }
     } catch (err) {
-      showToast('Invalid OTP. Please try again.', 'error');
+      showToast(err.response?.data?.message || 'Invalid OTP', 'error');
       setError(err.response?.data?.message || 'Invalid OTP');
     } finally {
       setIsSubmitting(false);
